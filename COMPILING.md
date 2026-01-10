@@ -11,7 +11,7 @@ Intended for production use. Includes full R8 optimization and strips all logs.
 ```bash
 ./gradlew extractReleaseDex
 ```
-`./gradlew extractReleaseDexЫ`
+`./gradlew extractReleaseDex`
 
 **Output Directory:** `app/build/outputs/apk/release/dex/`
 
