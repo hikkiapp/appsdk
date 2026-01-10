@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+>
+
+    <queries>
+        <package android:name="app.hikki"/>
+    </queries>
+
+    <application
+            android:allowBackup="true"
+            android:fullBackupContent="@xml/backup_rules"
+            android:dataExtractionRules="@xml/data_extraction_rules"
+            android:label="@string/app_name"
+            android:supportsRtl="true">
+
+        <receiver
+            android:name=".receiver.RemoteSettingsReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="app.hikki.api.GET_CONFIG" />
+                <action android:name="app.hikki.api.SET_CONFIG" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>
