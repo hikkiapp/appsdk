@@ -18,6 +18,8 @@ object ContextUtils {
             val currentActivityThread = currentActivityThreadMethod.invoke(null)
             val getApplicationMethod = activityThreadClass.getMethod("getApplication")
             getApplicationMethod.invoke(currentActivityThread) as? Context
+        } catch (e: ClassNotFoundException) {
+            null
         } catch (e: Exception) {
             e.printStackTrace()
             null

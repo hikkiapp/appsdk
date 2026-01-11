@@ -46,11 +46,18 @@ android {
             jvmTarget.set(JvmTarget.JVM_17)
         }
     }
+
+    testOptions {
+        unitTests.all {
+            it.jvmArgs("-XX:+EnableDynamicAgentLoading", "-Xshare:off")
+        }
+    }
 }
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     testImplementation("junit:junit:4.13.2")
+    testImplementation("io.mockk:mockk:1.14.7")
     implementation("org.lsposed.hiddenapibypass:hiddenapibypass:6.1")
 }
 
