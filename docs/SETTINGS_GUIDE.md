@@ -105,6 +105,15 @@ fun processButtonItem(settingsManager: SettingsManager, item: ConfigItem.ButtonI
 }
 ```
 
+## Testing Settings
+
+The **Hikki** store provides a feature to manually add packages to test the added settings in the application.
+
+Path in the app: **Settings -> Installed -> Manual store packages**.
+
+> [!IMPORTANT]
+> To gain access to this feature, you must contact the [chat](https://t.me/hikkichats) to obtain developer status.
+
 ## Key Properties
 
 - **title**: The display name shown to the user.
