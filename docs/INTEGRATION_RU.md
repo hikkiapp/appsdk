@@ -1,25 +1,25 @@
 # Руководство по интеграции
 
-Это руководство объясняет, как интегрировать `HikkiSdk` в целевое приложение в процессе реверс-инжиниринга (например, с
-использованием Smali, Frida или патчинга).
+В этом руководстве мы разберем, как интегрировать `HikkiSdk` в стороннее приложение. Эти методы применимы при
+реверс-инжиниринге с использованием Smali, Frida или прямого патчинга байт-кода.
 
-## Обзор инициализации
+## Как это работает
 
-Необходимо инициализировать два основных компонента:
+Для полноценной работы SDK необходимо инициализировать два ключевых модуля:
 
-1. **HikkiSdk Core**: Управляет настройками, хуками и логикой прокси.
-2. **Ghost Framework**: Обрабатывает обходы защиты (подмена подписи, подмена установщика и т. д.).
+1. **HikkiSdk Core**: Отвечает за базовую логику, работу с настройками и прокси.
+2. **Ghost Framework**: Занимается обходом защитных механизмов (подмена подписи, проверка установщика и т.д.).
 
 ---
 
 ## 1. Инициализация Core SDK
 
-В идеале SDK должен быть инициализирован как можно раньше, обычно в `Application.onCreate()` или
+Мы рекомендуем инициализировать SDK как можно раньше — лучше всего в методах `Application.onCreate()` или
 `Application.attachBaseContext()`.
 
-### Интеграция Smali (класс Application)
+### Интеграция через Smali (в классе Application)
 
-Найдите метод `onCreate` в классе `Application` целевого приложения и добавьте следующее:
+Найдите метод `onCreate` в классе `Application` и вставьте следующий код:
 
 ```smali
 # Lcom/target/app/MyApplication; -> onCreate()V
@@ -29,9 +29,9 @@ sget-object v1, Lhikki/sdk/hooks/HikkiSdk;->INSTANCE:Lhikki/sdk/hooks/HikkiSdk;
 invoke-virtual {v1, p0}, Lhikki/sdk/hooks/HikkiSdk;->init(Landroid/app/Application;)V
 ```
 
-### Ручной патчинг (MainActivity/Application)
+### Если нельзя изменить Application (патчинг MainActivity)
 
-Если вы не можете изменить класс Application, вы можете инициализировать его в `onCreate` класса `MainActivity`:
+Если доступ к классу Application ограничен, инициализацию можно выполнить в `onCreate` главной Activity:
 
 ```smali
 # Lcom/target/app/MainActivity; -> onCreate(Landroid/os/Bundle;)V
@@ -47,12 +47,12 @@ invoke-virtual {v1, v0}, Lhikki/sdk/hooks/HikkiSdk;->init(Landroid/content/Conte
 
 ---
 
-## 2. Ghost Framework (Защита от взлома)
+## 2. Ghost Framework (Обход защиты)
 
-Метод `initGhost` специально разработан для обхода проверок безопасности. Его следует вызывать в `attachBaseContext`,
-чтобы гарантировать, что он запустится до того, как приложение выполнит проверку подписи.
+Метод `initGhost` критически важен для нейтрализации проверок целостности. Его необходимо вызывать строго в
+`attachBaseContext`, чтобы он сработал до того, как приложение начнет проверять свою подпись.
 
-### Интеграция Smali (attachBaseContext)
+### Интеграция через Smali (в attachBaseContext)
 
 ```smali
 # Lcom/target/app/MyApplication; -> attachBaseContext(Landroid/content/Context;)V
@@ -64,12 +64,11 @@ invoke-virtual {v1, v0}, Lhikki/sdk/hooks/HikkiSdk;->initGhost(Landroid/content/
 
 ---
 
-## 3. Требования к Manifest
+## 3. Настройка AndroidManifest
 
-Для работы SDK (удаленные настройки) в `AndroidManifest.xml` должно быть следующее:
+Чтобы SDK мог принимать настройки удаленно, добавьте в `AndroidManifest.xml` следующий ресивер:
 
 ```xml
-
 <receiver
         android:name="hikki.sdk.receiver.RemoteSettingsReceiver"
         android:exported="true">
@@ -82,13 +81,11 @@ invoke-virtual {v1, v0}, Lhikki/sdk/hooks/HikkiSdk;->initGhost(Landroid/content/
 
 ---
 
-## 4. Интеграция функций
+## 4. Использование функциональных хуков
 
-Вы можете использовать `FeatureHooks` для проверки определенных функций или статуса подписки внутри целевого приложения.
+Класс `FeatureHooks` позволяет легко проверять состояние подписок или доступность функций внутри приложения.
 
-### Интеграция Smali (Проверка подписки)
-
-Чтобы проверить, подписан ли пользователь, вы можете создать экземпляр `FeatureHooks` и вызвать `isSubscribed()`:
+### Пример проверки подписки (Smali)
 
 ```smali
 new-instance v1, Lhikki/sdk/hooks/FeatureHooks;
@@ -99,24 +96,24 @@ invoke-virtual {v1}, Lhikki/sdk/hooks/FeatureHooks;->isSubscribed()Z
 
 move-result v0
 
-# v0 теперь содержит булев результат (0 или 1)
+# v0 теперь содержит результат (0 или 1)
 ```
 
 ---
 
-## 5. Устранение неполадок
+## 5. Решение проблем
 
-### Проблемы с контекстом (Context)
+### Ошибка Context (IllegalStateException)
 
-Если `HikkiSdk.context` выдает `IllegalStateException`, это означает, что `init(context)` никогда не вызывался. У SDK
-есть резервный механизм, использующий рефлексию для поиска `ActivityThread`, но безопаснее вызывать `init` явно.
+Если вы видите эту ошибку, значит `init(context)` не был вызван вовремя. Хотя SDK пытается найти контекст через
+рефлексию, лучше всегда вызывать `init` явно.
 
-### Прокси не применяется
+### Прокси не работает
 
-SDK вызывает `settingsManager.applyProxyOnStart()` во время `init`. Убедитесь, что `init` вызывается до того, как
-приложение сделает свой первый сетевой запрос.
+Убедитесь, что `init` вызывается до того, как приложение отправляет свои первые сетевые запросы. SDK применяет настройки
+прокси именно в момент инициализации.
 
 ### Сбои Ghost Framework
 
-`initGhost` должен быть вызван **до** любого кода, который проверяет подпись APK. Рекомендуемое место —
-`attachBaseContext`.
+Помните: `initGhost` должен быть вызван **до** любой проверки подписи. Если приложение падает или обнаруживает подмену,
+проверьте, не вызывается ли проверка раньше, чем отрабатывает `attachBaseContext`.
