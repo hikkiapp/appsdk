@@ -11,6 +11,7 @@ import hikki.sdk.ghost.GhostFramework
 import hikki.sdk.manager.FeatureSettings
 import hikki.sdk.manager.SettingsManager
 import hikki.sdk.receiver.RemoteSettingsReceiver
+import hikki.sdk.utils.ContextUtils
 
 /**
  * Main entry point for the Hikki SDK.
@@ -27,21 +28,14 @@ object HikkiSdk {
      * @throws IllegalStateException if initialization fails and reflection cannot retrieve the context.
      */
     val context: Context
-        @SuppressLint("PrivateApi")
         get() {
             return internalContext ?: synchronized(this) {
                 internalContext ?: run {
-                    // This is a fallback and might not work on all devices.
-                    try {
-                        val activityThreadClass = Class.forName("android.app.ActivityThread")
-                        val currentActivityThreadMethod = activityThreadClass.getMethod("currentActivityThread")
-                        val currentActivityThread = currentActivityThreadMethod.invoke(null)
-                        val getApplicationMethod = activityThreadClass.getMethod("getApplication")
-                        val appContext = getApplicationMethod.invoke(currentActivityThread) as Context
-                        init(appContext) // Initialize with the fetched context
+                    val appContext = ContextUtils.getApplicationContextViaReflection()
+                    if (appContext != null) {
+                        init(appContext)
                         internalContext!!
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+                    } else {
                         throw IllegalStateException("HikkiSdk has not been initialized and failed to get context via reflection. Please call HikkiSdk.init(context) in your Application class.")
                     }
                 }

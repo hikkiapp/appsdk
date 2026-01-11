@@ -90,6 +90,21 @@ fun getDefaultSettings(): List<ConfigItem> {
 }
 ```
 
+## Handling Button Clicks
+
+When a `ButtonItem` is clicked, the `processButtonItem` function in `SettingsUtils.kt` is called. You should handle the
+button action based on its `name`.
+
+```kotlin
+fun processButtonItem(settingsManager: SettingsManager, item: ConfigItem.ButtonItem) {
+    when (item.name) {
+        "my_button_name" -> {
+            // Perform action
+        }
+    }
+}
+```
+
 ## Key Properties
 
 - **title**: The display name shown to the user.

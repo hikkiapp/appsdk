@@ -1,5 +1,7 @@
 package hikki.sdk
 
+import hikki.sdk.manager.SettingsManager
+import hikki.sdk.utils.ProxyUtils
 import java.util.*
 
 
@@ -160,4 +162,29 @@ fun getDefaultSettings(): List<ConfigItem> {
             )
         )
     )
+}
+
+fun processButtonItem(settingsManager: SettingsManager, item: ConfigItem.ButtonItem) {
+    when (item.name) {
+        "apply_proxy" -> {
+            val settings = settingsManager.getSettings()
+            val proxyType = (settings.find { it.name == "proxy_type" } as? ConfigItem.EnumItem)?.value ?: "HTTP"
+            val host = (settings.find { it.name == "proxy_host" } as? ConfigItem.StringItem)?.value ?: ""
+            val port = (settings.find { it.name == "proxy_port" } as? ConfigItem.IntItem)?.value ?: 8080
+            val user = (settings.find { it.name == "proxy_user" } as? ConfigItem.StringItem)?.value
+            val pass = (settings.find { it.name == "proxy_password" } as? ConfigItem.StringItem)?.value
+
+            settingsManager.saveProxySettings(proxyType, host, port, user, pass)
+
+            val type = ProxyUtils.ProxyType.valueOf(proxyType)
+            ProxyUtils.setProxy(host, port, type, user, pass)
+            ProxyUtils().forceProxyApplying()
+        }
+
+        "reset_proxy" -> {
+            settingsManager.clearProxySettings()
+            ProxyUtils.resetAllProxies()
+            ProxyUtils().forceProxyApplying()
+        }
+    }
 }

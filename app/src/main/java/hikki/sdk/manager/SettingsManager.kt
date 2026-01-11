@@ -15,7 +15,7 @@ class SettingsManager(context: Context) {
     private val proxyPrefsName: String = "hikki_sdk_proxy_settings"
 
     private val prefs: SharedPreferences = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
-    private val proxyPrefs: SharedPreferences = context.getSharedPreferences(proxyPrefsName, Context.MODE_PRIVATE)
+    internal val proxyPrefs: SharedPreferences = context.getSharedPreferences(proxyPrefsName, Context.MODE_PRIVATE)
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -70,31 +70,6 @@ class SettingsManager(context: Context) {
         editor.apply()
     }
 
-    fun processButtonItem(item: ConfigItem.ButtonItem) {
-        when (item.name) {
-            "apply_proxy" -> {
-                val settings = getSettings()
-                val proxyType = (settings.find { it.name == "proxy_type" } as? ConfigItem.EnumItem)?.value ?: "HTTP"
-                val host = (settings.find { it.name == "proxy_host" } as? ConfigItem.StringItem)?.value ?: ""
-                val port = (settings.find { it.name == "proxy_port" } as? ConfigItem.IntItem)?.value ?: 8080
-                val user = (settings.find { it.name == "proxy_user" } as? ConfigItem.StringItem)?.value
-                val pass = (settings.find { it.name == "proxy_password" } as? ConfigItem.StringItem)?.value
-
-                saveProxySettings(proxyType, host, port, user, pass)
-
-                val type = ProxyUtils.ProxyType.valueOf(proxyType)
-                ProxyUtils.setProxy(host, port, type, user, pass)
-                ProxyUtils().forceProxyApplying()
-            }
-
-            "reset_proxy" -> {
-                clearProxySettings()
-                ProxyUtils.resetAllProxies()
-                ProxyUtils().forceProxyApplying()
-            }
-        }
-    }
-
     fun applyProxyOnStart() {
         val proxyType = proxyPrefs.getString("proxy_type", null)
         if (proxyType != null) {
@@ -117,7 +92,7 @@ class SettingsManager(context: Context) {
         }
     }
 
-    private fun saveProxySettings(proxyType: String, host: String, port: Int, user: String?, pass: String?) {
+    internal fun saveProxySettings(proxyType: String, host: String, port: Int, user: String?, pass: String?) {
         val editor = proxyPrefs.edit()
         editor.putString("proxy_type", proxyType)
         editor.putString("proxy_host", host)
@@ -127,7 +102,7 @@ class SettingsManager(context: Context) {
         editor.apply()
     }
 
-    private fun clearProxySettings() {
+    internal fun clearProxySettings() {
         proxyPrefs.edit().clear().apply()
     }
 }

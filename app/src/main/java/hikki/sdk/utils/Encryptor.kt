@@ -1,13 +1,10 @@
 package hikki.sdk.utils
 
 import android.util.Base64
-import java.io.ByteArrayOutputStream
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.util.Arrays
+import java.util.*
 
 
-object UniversalMorse {
+object Encryptor {
     private val ENC_BITS = IntArray(16)
     private val ENC_LEN = IntArray(16)
     private val DEC_MAP = IntArray(1024) { -1 }

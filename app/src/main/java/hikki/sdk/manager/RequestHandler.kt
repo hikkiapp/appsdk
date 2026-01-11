@@ -5,7 +5,7 @@ import android.content.Intent
 import android.util.Log
 import hikki.sdk.*
 import hikki.sdk.hooks.HikkiSdk
-import hikki.sdk.utils.UniversalMorse
+import hikki.sdk.utils.Encryptor
 import kotlinx.serialization.json.Json
 
 internal object RequestHandler {
@@ -20,7 +20,7 @@ internal object RequestHandler {
                 val settings = settingsManager.getSettings()
                 val payload = ConfigPayload(CURRENT_VERSION, settings)
                 val jsonPayload = jsonFormat.encodeToString(ConfigPayload.serializer(), payload)
-                val morsePayload = UniversalMorse.encodeToBase64(jsonPayload)
+                val morsePayload = Encryptor.encodeToBase64(jsonPayload)
 
                 Log.d("RequestHandler", "Returning settings: $jsonPayload")
 
@@ -35,14 +35,14 @@ internal object RequestHandler {
                 val morsePayload = intent.getStringExtra("json_payload")
                 if (morsePayload != null) {
                     try {
-                        val jsonPayload = UniversalMorse.decodeFromBase64(morsePayload)
+                        val jsonPayload = Encryptor.decodeFromBase64(morsePayload)
                         when (intent.getStringExtra("action")) {
                             "button_click" -> {
                                 val item = jsonFormat.decodeFromString(ConfigItem.serializer(), jsonPayload)
                                 val expectedHash = calculateConfigItemHash(item.name, item.section)
                                 if (item.hash == expectedHash) {
                                     if (item is ConfigItem.ButtonItem) {
-                                        settingsManager.processButtonItem(item)
+                                        processButtonItem(settingsManager, item)
                                     }
                                 } else {
                                     Log.w(
